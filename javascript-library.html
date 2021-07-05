@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TicTacToe JavaScript Library</title>
+    <script type="module" src="main.js"></script>
+    <link type="text/css" rel="stylesheet" href="default.css">
+</head>
+<body>
+
+<h1>TicTacToe JavaScript Library</h1>
+    
+<h2 id="introduction">Introduction</h2>
+
+<section>
+    <p>The order of fields is as below.</p>
+    <p>
+        <table class="board-small">
+            <tr><td>0</td><td>1</td><td>2</td></tr>
+            <tr><td>3</td><td>4</td><td>5</td></tr>
+            <tr><td>6</td><td>7</td><td>8</td></tr>
+        </table>
+    </p>
+</section>
+<section>
+    <p>Each field can have one of three states. Field's state is encoded on two bits.</p>
+    <p>
+        <table>
+            <tr><th>Symbol</th><th>Value</th><th>Encoded Value</th></tr>
+            <tr><td>.</td><td>0</td><td>00</td></tr>
+            <tr><td>o</td><td>1</td><td>01</td></tr>
+            <tr><td>x</td><td>2</td><td>10</td></tr>
+        </table>
+    </p>
+</section>
+<section>
+    <p>All board state as below...</p>
+    <p>
+        <table class="board-small">
+            <tr><td>o</td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td></tr>
+            <tr><td></td><td>x</td><td></td></tr>
+        </table>
+    </p>
+    <p>... is encoded as...</p>
+    <p>
+        <table class="board-small">
+            <tr><td>01</td><td>00</td><td>00</td></tr>
+            <tr><td>00</td><td>00</td><td>00</td></tr>
+            <tr><td>00</td><td>10</td><td>00</td></tr>
+        </table>
+    </p>
+    <p>... 001000000000000001 (bin) = 32769 (dec).</p>
+</section>
+
+<h2 id="examples">Examples</h2>
+
+<section id="example-1">
+<h3>Setting a board's field value.</h3>
+<pre class="code">
+let state_empty = 0;
+document.writeln( state_empty );
+let state_first = TicTacToe.set( state_empty, 0, TicTacToe.CIRCLE );
+document.writeln( state_first );
+let state_second = TicTacToe.set( state_first, 7, TicTacToe.CROSS );
+document.writeln( state_second );
+</pre>
+</section>
+
+<hr/>
+
+<section id="example-2">
+<h3>Converting a board state to string.</h3>
+<pre class="code">
+document.writeln( TicTacToe.toString(0) );
+document.writeln( '' );
+document.writeln( TicTacToe.toString(1) );
+document.writeln( '' );
+document.writeln( TicTacToe.toString(32769) );
+</pre>
+</section>
+
+<hr/>
+
+<section id="example-3">
+<h3>Counting a number of unique states.</h3>
+<pre class="code">
+let min_max = new MinMax();
+document.writeln( `Number of unique states: ${min_max.items.size}` );
+</pre>
+</section>
+
+<hr/>
+
+<section id="example-4">
+<h3>Retrieving the next possible states.</h3>
+<pre class="code">
+let state = 32769;
+TicTacToe.actions( state )
+    .map( action => TicTacToe.set( state, action, TicTacToe.CIRCLE ) )
+    .map( TicTacToe.toString )
+    .forEach( text => { document.writeln( text ); document.writeln( '' ); });
+</pre>
+</section>
+
+<hr/>
+
+<section id="example-5">
+<h3>Calculating an expected game result for the state.</h3>
+<pre class="code">
+function writeOutputResult( result )
+{
+    document.writeln('');
+    
+    switch ( result )
+    {
+        case 0: document.writeln( 'Draw is the best result for both.' ); break;
+        case 1: document.writeln( 'Winning position for O.' ); break;
+        case 2: document.writeln( 'Winning position for X.' ); break;
+    }
+
+    document.writeln('');
+}
+
+let min_max = new MinMax();
+let state = 0;
+
+document.writeln( TicTacToe.toString(state) );
+writeOutputResult( min_max.items.get(state) );
+
+state = TicTacToe.set( state, 0, TicTacToe.CIRCLE );
+
+document.writeln( TicTacToe.toString(state) );
+writeOutputResult( min_max.items.get(state) );
+
+state = TicTacToe.set( state, 1, TicTacToe.CROSS );
+
+document.writeln( TicTacToe.toString(state) );
+writeOutputResult( min_max.items.get(state) );
+</pre>
+</section>
+
+</body>
+</html>

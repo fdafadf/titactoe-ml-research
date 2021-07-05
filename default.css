@@ -1,0 +1,34 @@
+.js-keyword { color: blue }
+.js-literal { color: green }
+.js-function { color: firebrick }
+td, th { border: 1px solid gray; padding: 0.5em }
+table { border-collapse: collapse; }
+table.board-small { box-shadow: 0 0 1em lightgray; }
+table.board-small td { width: 1em; height: 1em; text-align: center; background-color: lightgray; }
+body > article > h1 { cursor: pointer; }
+body > article > h1:hover { background-color: lightgray; }
+body > article > div { display: none; }
+/* section { margin-left: 1em; } */
+
+table.board
+{
+    background-color: lightgray;
+    box-shadow: 0 0 1em lightgray;
+    margin: 1em auto;
+}
+table.board td 
+{
+    border: 1px solid gray;
+    width: 10vh;
+    height: 10vh;
+    text-align: center;
+    font-size: 6vh;
+    font-family: sans-serif;
+    color: #222;
+    cursor: pointer;
+    background-color: lightgray;
+}
+table.board td:hover
+{
+    background-color: #ddd;
+}

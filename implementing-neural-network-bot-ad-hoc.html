@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TicTacToe - Implementing a bot - Neural Network (ad-hoc implementation)</title>
+    <script type="module" src="main.js"></script>
+    <link type="text/css" rel="stylesheet" href="default.css">
+</head>
+<body>
+
+<h1>TicTacToe - Implementing a bot - Neural Network (ad-hoc implementation)</h1>
+
+<p>There are two code examples.</p>
+<p>The second one shows how to train a simple neural network to correctly predict the optimal result at any position on the board .</p>
+<p>The first one shows how to write a bot using a trained neural network.</p>
+<p>The learning time is about 3 minutes on low quality computer.</p>
+
+<section id="example-1">
+<h3>Playing.</h3>
+<pre class="code">
+let { weights } = await (await fetch( 'implementing-neural-network-bot-ad-hoc-pretrained-weights.json' )).json();
+let network_shape = [[72, 19], [72, 73], [36, 73], [18, 37], [3, 19]];
+let layers = network_shape.map( layer_shape => Network.he(Tensor.empty(layer_shape)) );
+let network = new Network( layers );
+network.loadWeights( weights );
+let current_state = 0;
+let board = new Board();
+document.body.appendChild( board.element );
+
+function encodeGameState( state )
+{
+    let result = Tensor.empty( [19, 1] );
+
+    for ( let i = 0; i < 9; i++ ) 
+    {
+        let field_state = TicTacToe.field( state, i );
+        result[i] = field_state == TicTacToe.CIRCLE ? 1 : 0;
+        result[i + 9] = field_state == TicTacToe.CROSS ? 1 : 0;
+    }
+
+    result[18] = 1;
+    return result;
+}
+
+function prediction( state )
+{
+    let prediction = network.eval( encodeGameState(state) );
+    let max_index = prediction.indexOfMax();
+    return { state, prediction, max_index };
+}
+
+function bestPrediction( state )
+{
+    let next_states = TicTacToe.actions( state ).map( action => TicTacToe.set( state, action, TicTacToe.CROSS ) );
+    let predictions = next_states.map( prediction );
+    let win_predictions = predictions.filter(({ max_index }) => max_index == 1 );
+
+    if ( win_predictions.length > 0 )
+    {
+        return win_predictions[0].state;
+    }
+
+    let draw_predictions = predictions.filter(({ max_index }) => max_index == 2 );
+
+    if ( draw_predictions.length > 0 )
+    {
+        return draw_predictions[0].state;
+    }
+
+    return predictions[0].state;
+}
+
+board.onFieldSelected = ({ x, y }) => 
+{
+    let action = TicTacToe.action( x, y );
+    let is_empty = TicTacToe.field( current_state, action ) == 0;
+
+    if ( is_empty && !TicTacToe.isFinal( current_state ) )
+    {
+        current_state = TicTacToe.set( current_state, action, TicTacToe.CIRCLE );
+        
+        if ( !TicTacToe.isFinal( current_state ) )
+        {
+            current_state = bestPrediction( current_state ) ?? current_state;
+        }
+
+        board.state = current_state;
+    }
+}
+</pre>
+</section>
+
+<section id="example-1">
+<h3>Training.</h3>
+<pre class="code worker">
+const LABEL_WINNER_CIRCLE = [1, 0, 0];
+const LABEL_WINNER_CROSS = [0, 1, 0];
+const LABEL_DRAW = [0, 0, 1];
+
+function createNetwork()
+{
+    let network = new Network(
+    [
+        Network.he( Tensor.empty([72, 19]) ),
+        Network.he( Tensor.empty([72, 73]) ),
+        Network.he( Tensor.empty([36, 73]) ),
+        Network.he( Tensor.empty([18, 37]) ),
+        Network.he( Tensor.empty([3, 19]) )
+    ]);
+    return network;
+}
+
+function testAccuracy( network, training_set )
+{
+    let correct_answers = 0;
+    let training_set_size = training_set.length;
+
+    for (let i = 0; i < training_set_size; i++) 
+    {
+        let output = network.eval( training_set[i].input );
+        training_set[i].lastPredict = output;
+        let maxIndex = output.indexOfMax();
+
+        if ( training_set[i].label[maxIndex] )
+        {
+            correct_answers++;
+        }
+    }
+
+    return correct_answers / training_set_size;
+}
+
+function encodeGameResult( game_result )
+{
+    switch ( game_result )
+    {
+        case TicTacToe.CIRCLE: return LABEL_WINNER_CIRCLE;
+        case TicTacToe.CROSS: return LABEL_WINNER_CROSS;
+        default: return LABEL_DRAW;
+    }
+}
+
+function encodeGameState( state )
+{
+    let result = Tensor.empty([19, 1]);
+
+    for ( let i = 0; i < 9; i++ ) 
+    {
+        let field_state = TicTacToe.field(state, i);
+        result[i] = field_state == TicTacToe.CIRCLE ? 1 : 0;
+        result[i + 9] = field_state == TicTacToe.CROSS ? 1 : 0;
+    }
+
+    result[18] = 1;
+    return result;
+}
+
+let min_max = new MinMax();
+let network = createNetwork();
+let learning_rate = 0.001;
+let min_accuracy = 0.1;
+let accuracy = 0;
+let error = Number.POSITIVE_INFINITY;
+let training_set = Array.from( min_max.items ).map(([ key, value ]) => 
+{ 
+    let input = encodeGameState( key );
+    let label = encodeGameResult( value );
+    return { input, label };
+});
+
+while ( accuracy < 1 )
+{
+    training_set.shuffle();
+    error = network.train( training_set, learning_rate );
+    accuracy = testAccuracy( network, training_set, false );
+    postMessage({ error, accuracy });
+}
+
+postMessage( 'WEIGHTS' );
+postMessage( network.layers );
+</pre>
+</section>
+
+</body>
+</html>

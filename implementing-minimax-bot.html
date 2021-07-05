@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TicTacToe - Implementing a bot - Minimax</title>
+    <script type="module" src="main.js"></script>
+    <link type="text/css" rel="stylesheet" href="default.css">
+</head>
+<body>
+
+<h1>TicTacToe - Implementing a bot - simple <a href="https://en.wikipedia.org/wiki/Minimax">Minimax alghoritm</a></h1>
+
+<section id="example-1">
+<h3>Example Code.</h3>
+<pre class="code">
+let current_state = 0;
+let board = new Board();
+let min_max = new MinMax();
+document.body.appendChild(board.element);
+board.onFieldSelected = ({ x, y }) => 
+{
+    let action = TicTacToe.action(x, y);
+    let is_empty = TicTacToe.field(current_state, action) == 0;
+
+    if (is_empty && !TicTacToe.isFinal(current_state))
+    {
+        current_state = TicTacToe.set(current_state, action, TicTacToe.CIRCLE);
+        
+        if (!TicTacToe.isFinal(current_state))
+        {
+            let { state } = min_max.best(current_state, TicTacToe.CROSS) || { state: undefined };
+            current_state = state ?? current_state;
+        }
+
+        board.state = current_state;
+    }
+}
+</pre>
+</section>
+
+</body>
+</html>
