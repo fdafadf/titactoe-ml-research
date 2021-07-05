@@ -51,7 +51,7 @@ function onLoad()
         function document_writeln( value )
         {
             output_element.innerText += value + "\r\n";
-            output_element.scrollIntoView( false );
+            output_element.scrollIntoViewIfNeeded();
         }
     
         function document_body_appendChild( node )
